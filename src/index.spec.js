@@ -15,6 +15,7 @@ const testData = {
   zero: 0,
   someArray: [1, 2, 3],
   someArrayWithText: ['a', 'b', 'c'],
+  someArrayWithObjects: [{ field: 1 }, { field: '2' }, { field: null }],
   f: false,
   t: true,
   nestedObject: {
@@ -700,6 +701,33 @@ describe('Evaluate: ', () => {
       const nanval = NaN;
       const res = evaluate("NaN < 1", testData);
       res.should.equal(nanval < 1);
+    });
+  });
+
+  describe('\'contains\' operator', () => {
+    it('should find object with a number property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":1}\'', testData);
+      res.should.equal(true);
+    });
+
+    it('should not find object with a number property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":2}\'', testData);
+      res.should.equal(false);
+    });
+
+    it('should find object with a string property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":"2"}\'', testData);
+      res.should.equal(true);
+    });
+
+    it('should not find object with a string property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":"1"}\'', testData);
+      res.should.equal(false);
+    });
+
+    it('should find object with a null property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":null}\'', testData);
+      res.should.equal(true);
     });
   });
 });
