@@ -10,6 +10,7 @@ const testData = {
   a: 1,
   stringa: '1',
   b: 2,
+  stringb: '2',
   c: 3,
   d: -1,
   zero: 0,
@@ -727,6 +728,26 @@ describe('Evaluate: ', () => {
 
     it('should find object with a null property', () => {
       const res = evaluate('someArrayWithObjects contains \'{"field":null}\'', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a number property build by string concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":\' + stringa +  \'}\')', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a number property build by number concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":\' + a +  \'}\')', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a string property build by string concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":"\' + stringb +  \'"}\')', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a string property build by number concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":"\' + b +  \'"}\')', testData);
       res.should.equal(true);
     });
   });
