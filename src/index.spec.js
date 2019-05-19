@@ -25,6 +25,7 @@ const testData = {
     propertyWithObject: {
       PREPARED_CONDITION_2: 'fake prepared condition property'
     },
+    arrayWithObjects: [{ field: 1 }, { field: '2' }, { field: null }],
   }
 };
 
@@ -750,6 +751,12 @@ describe('Evaluate: ', () => {
       const res = evaluate('someArrayWithObjects contains (\'{"field":"\' + b +  \'"}\')', testData);
       res.should.equal(true);
     });
+
+    xit('should find object inside the array which is a property of another object', () => {
+      const res = evaluate('nestedObject.arrayWithObjects contains (\'{"field":1}\')', testData);
+      res.should.equal(true);
+    });
+
   });
 });
 
