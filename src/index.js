@@ -163,13 +163,17 @@ export function evaluate(expression, data) {
   // Stack for Operators: 'ops'
   const ops = new Stack();
 
+  // Keep track of unbalanced parenthesis
+  const unbalancedParens = [];
+
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i] === '(') {
       ops.push(tokens[i]);
+      unbalancedParens.push(i);
 
       // Closing brace encountered, solve expression since the last opening brace
     } else if (tokens[i] === ')') {
-      while (ops.peek() !== '(') {
+      while (ops.peek() !== '(' && !ops.empty()) {
         const op = ops.pop();
         if (oneParamOps.indexOf(op) !== -1) {
           values.push(applyOp(op, values.pop()));
@@ -177,7 +181,13 @@ export function evaluate(expression, data) {
           values.push(applyOp(op, values.pop(), values.pop()));
         }
       }
-      ops.pop();// removing opening brace
+      // if the ops array is empty means there is an unbalanced closing parenthesis
+      if (ops.empty()) {
+        unbalancedParens.push(i);
+      } else {
+        unbalancedParens.pop();
+        ops.pop(); // removing opening brace
+      }
 
       // Current token is an operator.
     } else if (allowedOps.indexOf(tokens[i]) > -1) {
@@ -197,22 +207,32 @@ export function evaluate(expression, data) {
       // Push current token to ops
       ops.push(tokens[i]);
     } else {
-      // console.log(tokens[i])
-      if (tokens[i] in data) {
-        // console.log("val : ",data[tokens[i]])
-        values.push(_.get(data, tokens[i]));
-      } else {
-        if (!isNaN(tokens[i])) {
+        if (tokens[i] == 'null') {
+          values.push(null);
+        } else if (tokens[i] == 'undefined') {
+          values.push(undefined);
+        } else if (tokens[i] == 'true') {
+          values.push(true);
+        } else if (tokens[i] == 'false') {
+          values.push(false);
+        } else if (!isNaN(tokens[i])) {
           values.push(parseInt(tokens[i]));
-        } else {
+        } else if (tokens[i].match(/^\'.*\'$/)) {
           // removing single quotes around the text values
           let literal = tokens[i].replace(/'/g, '');
-          literal = literal === 'true' || (literal === 'false' ? false : literal);
+          // literal = literal === 'true' || (literal === 'false' ? false : literal);
           values.push(literal);
+        } else {
+          values.push(_.get(data, tokens[i]));
         }
-      }
     }
   }
+
+  // if there are unbalanced parenthesis throw an error
+  if (unbalancedParens.length !== 0) {
+    throw new Error(`Parens with the following token indexes are unbalanced: ${unbalancedParens}`);
+  }
+
   // debugger
   // Parsed expression tokens are pushed to values/ops respectively,
   // Running while loop to evaluate the expression

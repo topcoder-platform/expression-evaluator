@@ -33,8 +33,5 @@ jspm_packages
 # Editors
 .idea
 
-# Lib
-lib
-
 # others
 .DS_Store

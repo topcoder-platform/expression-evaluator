@@ -10,11 +10,13 @@ const testData = {
   a: 1,
   stringa: '1',
   b: 2,
+  stringb: '2',
   c: 3,
   d: -1,
   zero: 0,
   someArray: [1, 2, 3],
   someArrayWithText: ['a', 'b', 'c'],
+  someArrayWithObjects: [{ field: 1 }, { field: '2' }, { field: null }],
   f: false,
   t: true,
   nestedObject: {
@@ -23,7 +25,9 @@ const testData = {
     propertyWithObject: {
       PREPARED_CONDITION_2: 'fake prepared condition property'
     },
-  }
+    arrayWithObjects: [{ field: 1 }, { field: '2' }, { field: null }],
+  },
+  someNullArray: null
 };
 
 const preparedConditions = {
@@ -40,11 +44,46 @@ describe('Evaluate: ', () => {
       result.should.equal(true);
     });
 
+    it('!hasLength (true)', () => {
+      const expression = '!(someArray hasLength 0)';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
     it('hasLength (false)', () => {
       const expression = 'someArray hasLength 4';
       const result = evaluate(expression, testData);
 
       result.should.equal(false);
+    });
+
+    it('hasLength (null)', () => {
+      const expression = 'someNullArray hasLength 0';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
+    it('hasLength (undefined)', () => {
+      const expression = 'someNonExistingArray hasLength 0';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
+    it('== null', () => {
+      const expression = 'someNullArray == null';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
+    it('== undefined', () => {
+      const expression = 'someNonExistingArray == undefined';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
     });
 
     it('!false => true', () => {
@@ -227,19 +266,19 @@ describe('Evaluate: ', () => {
       result.should.equal(testData.a);
     });
 
-    xit('should return same if an argument is null', () => {
+    it('should return same if an argument is null', () => {
       const result = evaluate('a + null', testData);
 
       result.should.equal(testData.a);
     });
 
-    xit('should return NaN if an argument is undefined', () => {
+    it('should return NaN if an argument is undefined', () => {
       const result = evaluate('a + undefined', testData);
 
       result.should.be.NaN;
     });
 
-    xit('should return NaN if an argument is NaN', () => {
+    it('should return NaN if an argument is NaN', () => {
       const result = evaluate('a + NaN', testData);
 
       result.should.be.NaN;
@@ -277,7 +316,7 @@ describe('Evaluate: ', () => {
       result.should.equal(testData.a);
     });
 
-    xit('should return 0 if an argument is null', () => {
+    it('should return 0 if an argument is null', () => {
       const result = evaluate('a - null', testData);
 
       result.should.equal(testData.a);
@@ -334,7 +373,7 @@ describe('Evaluate: ', () => {
       res.should.equal(testData.b);
     });
 
-    xit('should return 0 if an argument is null', () => {
+    it('should return 0 if an argument is null', () => {
       const result = evaluate('a * null', testData);
 
       result.should.equal(0);
@@ -558,20 +597,60 @@ describe('Evaluate: ', () => {
       res.should.equal(4 + 2);
     });
 
+    it('should throw error if one opening parenthesis is unbalanced', () => {
+      const expression = `((someArrayWithText contains 'a') || (someArrayWithText contains 'b') || (someArrayWithText contains 'c')`;
+
+      try {
+        evaluate(expression, testData);
+      } catch (error) {
+        error.message.should.equal('Parens with the following token indexes are unbalanced: 0');
+      }
+    });
+
+    it('should throw error if multiple opening parenthesis are unbalanced', () => {
+      const expression = `(someArrayWithText contains 'a') || ((someArrayWithText contains 'b') || ((someArrayWithText contains 'c')`;
+
+      try {
+        evaluate(expression, testData);
+      } catch (error) {
+        error.message.should.equal('Parens with the following token indexes are unbalanced: 6,13');
+      }
+    });
+
+    it('should throw error if one closing parenthesis is unbalanced', () => {
+      const expression = `(someArrayWithText contains 'a')) || (someArrayWithText contains 'b') || (someArrayWithText contains 'c')`;
+
+      try {
+        evaluate(expression, testData);
+      } catch (error) {
+        error.message.should.equal('Parens with the following token indexes are unbalanced: 5');
+      }
+    });
+
+    it('should throw error if multiple closing parenthesis are unbalanced', () => {
+      const expression = `(someArrayWithText contains 'a') || (someArrayWithText contains 'b')) || (someArrayWithText contains 'c'))`;
+
+      try {
+        evaluate(expression, testData);
+      } catch (error) {
+        error.message.should.equal('Parens with the following token indexes are unbalanced: 11,18');
+      }
+    });
+
     xit('should parse literal constants like numbers with decimal numbers', () => {
       const res = evaluate('4.2 + 2.3', testData);
       res.should.equal(4.2 + 2.3);
     });
 
-    xit('should parse literal constants like booleans', () => {
+    it('should parse literal constants like booleans', () => {
       const res = evaluate('true && true', testData);
       res.should.equal(true);
     });
 
-    xit('should treat unknown variables as undefined', () => {
+    it('should treat unknown variables as undefined', () => {
       const res = evaluate('unknownVariable', testData);
 
-      res.should.be.undefined;
+      (res === undefined).should.be.true;
     });
   });
 
@@ -586,12 +665,12 @@ describe('Evaluate: ', () => {
       res.should.equal(true);
     });
 
-    xit('!undefined => true', () => {
+    it('!undefined => true', () => {
       const res = evaluate('!undefined', testData);
       res.should.equal(true);
     });
 
-    xit('!null => true', () => {
+    it('!null => true', () => {
       const res = evaluate('! null', testData);
       res.should.equal(true);
     });
@@ -651,7 +730,7 @@ describe('Evaluate: ', () => {
       res.should.equal(undefined < 1);
     });
 
-    xit('should compare null', () => {
+    it('should compare null', () => {
       const res = evaluate("null < 1", testData);
       res.should.equal(null < 1);
     });
@@ -660,6 +739,58 @@ describe('Evaluate: ', () => {
       const nanval = NaN;
       const res = evaluate("NaN < 1", testData);
       res.should.equal(nanval < 1);
+    });
+  });
+
+  describe('\'contains\' operator', () => {
+    it('should find object with a number property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":1}\'', testData);
+      res.should.equal(true);
+    });
+
+    it('should not find object with a number property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":2}\'', testData);
+      res.should.equal(false);
+    });
+
+    it('should find object with a string property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":"2"}\'', testData);
+      res.should.equal(true);
+    });
+
+    it('should not find object with a string property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":"1"}\'', testData);
+      res.should.equal(false);
+    });
+
+    it('should find object with a null property', () => {
+      const res = evaluate('someArrayWithObjects contains \'{"field":null}\'', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a number property build by string concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":\' + stringa +  \'}\')', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a number property build by number concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":\' + a +  \'}\')', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a string property build by string concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":"\' + stringb +  \'"}\')', testData);
+      res.should.equal(true);
+    });
+
+    it('should find object with a string property build by number concatenation', () => {
+      const res = evaluate('someArrayWithObjects contains (\'{"field":"\' + b +  \'"}\')', testData);
+      res.should.equal(true);
+    });
+
+    xit('should find object inside the array which is a property of another object', () => {
+      const res = evaluate('nestedObject.arrayWithObjects contains (\'{"field":1}\')', testData);
+      res.should.equal(true);
     });
   });
 });
