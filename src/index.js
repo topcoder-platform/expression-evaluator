@@ -207,20 +207,24 @@ export function evaluate(expression, data) {
       // Push current token to ops
       ops.push(tokens[i]);
     } else {
-      // console.log(tokens[i])
-      if (tokens[i] in data) {
-        // console.log("val : ",data[tokens[i]])
-        values.push(_.get(data, tokens[i]));
-      } else {
-        if (!isNaN(tokens[i])) {
+        if (tokens[i] == 'null') {
+          values.push(null);
+        } else if (tokens[i] == 'undefined') {
+          values.push(undefined);
+        } else if (tokens[i] == 'true') {
+          values.push(true);
+        } else if (tokens[i] == 'false') {
+          values.push(false);
+        } else if (!isNaN(tokens[i])) {
           values.push(parseInt(tokens[i]));
-        } else {
+        } else if (tokens[i].match(/^\'.*\'$/)) {
           // removing single quotes around the text values
           let literal = tokens[i].replace(/'/g, '');
-          literal = literal === 'true' || (literal === 'false' ? false : literal);
+          // literal = literal === 'true' || (literal === 'false' ? false : literal);
           values.push(literal);
+        } else {
+          values.push(_.get(data, tokens[i]));
         }
-      }
     }
   }
 

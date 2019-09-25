@@ -26,7 +26,8 @@ const testData = {
       PREPARED_CONDITION_2: 'fake prepared condition property'
     },
     arrayWithObjects: [{ field: 1 }, { field: '2' }, { field: null }],
-  }
+  },
+  someNullArray: null
 };
 
 const preparedConditions = {
@@ -43,11 +44,46 @@ describe('Evaluate: ', () => {
       result.should.equal(true);
     });
 
+    it('!hasLength (true)', () => {
+      const expression = '!(someArray hasLength 0)';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
     it('hasLength (false)', () => {
       const expression = 'someArray hasLength 4';
       const result = evaluate(expression, testData);
 
       result.should.equal(false);
+    });
+
+    it('hasLength (null)', () => {
+      const expression = 'someNullArray hasLength 0';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
+    it('hasLength (undefined)', () => {
+      const expression = 'someNonExistingArray hasLength 0';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
+    it('== null', () => {
+      const expression = 'someNullArray == null';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
+    });
+
+    it('== undefined', () => {
+      const expression = 'someNonExistingArray == undefined';
+      const result = evaluate(expression, testData);
+
+      result.should.equal(true);
     });
 
     it('!false => true', () => {
@@ -230,19 +266,19 @@ describe('Evaluate: ', () => {
       result.should.equal(testData.a);
     });
 
-    xit('should return same if an argument is null', () => {
+    it('should return same if an argument is null', () => {
       const result = evaluate('a + null', testData);
 
       result.should.equal(testData.a);
     });
 
-    xit('should return NaN if an argument is undefined', () => {
+    it('should return NaN if an argument is undefined', () => {
       const result = evaluate('a + undefined', testData);
 
       result.should.be.NaN;
     });
 
-    xit('should return NaN if an argument is NaN', () => {
+    it('should return NaN if an argument is NaN', () => {
       const result = evaluate('a + NaN', testData);
 
       result.should.be.NaN;
@@ -280,7 +316,7 @@ describe('Evaluate: ', () => {
       result.should.equal(testData.a);
     });
 
-    xit('should return 0 if an argument is null', () => {
+    it('should return 0 if an argument is null', () => {
       const result = evaluate('a - null', testData);
 
       result.should.equal(testData.a);
@@ -337,7 +373,7 @@ describe('Evaluate: ', () => {
       res.should.equal(testData.b);
     });
 
-    xit('should return 0 if an argument is null', () => {
+    it('should return 0 if an argument is null', () => {
       const result = evaluate('a * null', testData);
 
       result.should.equal(0);
@@ -606,15 +642,15 @@ describe('Evaluate: ', () => {
       res.should.equal(4.2 + 2.3);
     });
 
-    xit('should parse literal constants like booleans', () => {
+    it('should parse literal constants like booleans', () => {
       const res = evaluate('true && true', testData);
       res.should.equal(true);
     });
 
-    xit('should treat unknown variables as undefined', () => {
+    it('should treat unknown variables as undefined', () => {
       const res = evaluate('unknownVariable', testData);
 
-      res.should.be.undefined;
+      (res === undefined).should.be.true;
     });
   });
 
@@ -629,12 +665,12 @@ describe('Evaluate: ', () => {
       res.should.equal(true);
     });
 
-    xit('!undefined => true', () => {
+    it('!undefined => true', () => {
       const res = evaluate('!undefined', testData);
       res.should.equal(true);
     });
 
-    xit('!null => true', () => {
+    it('!null => true', () => {
       const res = evaluate('! null', testData);
       res.should.equal(true);
     });
@@ -694,7 +730,7 @@ describe('Evaluate: ', () => {
       res.should.equal(undefined < 1);
     });
 
-    xit('should compare null', () => {
+    it('should compare null', () => {
       const res = evaluate("null < 1", testData);
       res.should.equal(null < 1);
     });
@@ -756,7 +792,6 @@ describe('Evaluate: ', () => {
       const res = evaluate('nestedObject.arrayWithObjects contains (\'{"field":1}\')', testData);
       res.should.equal(true);
     });
-
   });
 });
 
